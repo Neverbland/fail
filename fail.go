@@ -25,6 +25,18 @@ func (s List) Error() string {
 	return "[" + strings.Join(msg, `,`) + "]"
 }
 
+func (s List) ErrorView() interface{} {
+	view := []interface{}{}
+
+	for _, err := range s {
+		if IsError(err) {
+			view = append(view, View(err))
+		}
+	}
+
+	return view
+}
+
 func (s List) IsError() bool {
 	for _, err := range s {
 		if IsError(err) {
@@ -50,6 +62,18 @@ func (col Collection) Error() string {
 	return "[" + strings.Join(msg, `,`) + "]"
 }
 
+func (col Collection) ErrorView() interface{} {
+	view := map[int]interface{}{}
+
+	for key, err := range col {
+		if IsError(err) {
+			view[key] = View(err)
+		}
+	}
+
+	return view
+}
+
 func (col Collection) IsError() bool {
 	for _, err := range col {
 		if IsError(err) {
@@ -73,6 +97,18 @@ func (m Map) Error() string {
 	}
 
 	return "[" + strings.Join(msg, `,`) + "]"
+}
+
+func (m Map) ErrorView() interface{} {
+	view := map[string]interface{}{}
+
+	for key, err := range m {
+		if IsError(err) {
+			view[key] = View(err)
+		}
+	}
+
+	return view
 }
 
 func (m Map) IsError() bool {
@@ -110,4 +146,23 @@ func IsError(err error) bool {
 	}
 
 	return true
+}
+
+// Expected to return error data that can be decoded (by json.Decoder for example)
+type Viewable interface {
+	ErrorView() interface{}
+}
+
+// Get error view data
+func View(err error) interface{} {
+
+	if !IsError(err) {
+		return nil
+	}
+
+	if e, ok := err.(Viewable); ok {
+		return e.ErrorView()
+	}
+
+	return err.Error()
 }
