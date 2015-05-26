@@ -166,3 +166,14 @@ func View(err error) interface{} {
 
 	return err.Error()
 }
+
+//simple replacement for errors.errorString
+type Message string
+
+func (m Message) Error() string {
+	return string(m)
+}
+
+func Errorf(format string, args ...interface{}) Message {
+	return Message(fmt.Sprintf(format, args...))
+}
